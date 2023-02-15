@@ -1,69 +1,53 @@
-
-/* Following program is a C++ implementation of Rabin Karp Algorithm given in the CLRS book */
 #include <bits/stdc++.h>
 using namespace std;
 
-// max_char_val is the number of characters in the input alphabet
-#define max_char_val 256
-
-void search(string pat, string txt, int prime_no){
-  int p_size = pat.size();
-  int t_size = txt.size();
-  int itr1, itr2;
-  int pat_hash_val = 0; 
-  int txt_hash_val = 0; 
-  int default_val = 1;
-
-  // The value of default_val would be "pow(max_char_val, p_size-1)%prime_no"
-  for (itr1 = 0; itr1 < p_size - 1; itr1++)
-    default_val = (default_val * max_char_val) % prime_no;
-
-  // Calculate the hash value of pattern and first window of text
-  for (itr1 = 0; itr1 < p_size; itr1++) {
-    pat_hash_val = (max_char_val * pat_hash_val + pat[itr1]) % prime_no;
-    txt_hash_val = (max_char_val * txt_hash_val + txt[itr1]) % prime_no;
+vector<int> patternSearch(string pat, string txt, int mod_val){
+  vector<int> v1;
+  int t_size = text.length();
+  int p_size = pattern.length();
+  int prime_no = 256;  
+  int mod_val = INT_MAX; 
+  int patternHash = 0;
+  int textHash = 0;
+  int h=1;
+  
+  for (int i = 0; i < p_size-1; i++) {
+      h = (h * prime_no) % mod_val;
   }
-
-  // Slide the pattern over text one by one
-  for (itr1 = 0; itr1 <= t_size - p_size; itr1++) {
-    // Check the hash values of current window of text and pattern. If the hash
-    // values match then only check for characters one by one.
-    if (pat_hash_val == txt_hash_val) {
-      /* Check for characters one by one */
-      for (itr2 = 0; itr2 < p_size; itr2++) {
-        if (txt[itr1 + itr2] != pat[itr2]) {
-          break;
-        }
+  
+  // calculate the hash value of the pattern and the first substring of the text
+  for (int i = 0; i < p_size; i++) {
+      patternHash = (patternHash * prime_no + pattern[i]) % mod_val;
+      textHash = (textHash * prime_no + text[i]) % mod_val;
+  }
+  
+  // compare the hash values and the characters of the pattern and the substring
+  for (int i = 0; i <= t_size-p_size; i++) {
+      if (patternHash == textHash) {
+          if (pattern == text.substr(i, p_size)) {
+              v1.push_back(i+1);  // match found
+          }
       }
-      // if pat_hash_val == txt_hash_val and 
-      // pat[0...p_size-1] = txt[i, i+1,...i+p_size-1]
-      if (itr2 == p_size)
-        cout << "Pattern found at index " << itr1+1 << endl;
-    }
-    // Calculate hash value for next window of text:
-    // Remove leading digit, add trailing digit
-    if (itr1 < t_size - p_size) {
-      txt_hash_val = (max_char_val * (txt_hash_val - txt[itr1] * default_val) + txt[itr1 + p_size]) % prime_no;
-      // We might get negative value of txt_hash_val, converting
-      // it to positive
-      if (txt_hash_val < 0)
-        txt_hash_val = (txt_hash_val + prime_no);
-    }
+      // calculate the hash value of the next substring of the text
+      if (i < t_size-p_size) {
+          textHash = (prime_no * (textHash - text[i] * h) + text[i+p_size]) % mod_val;
+          if (textHash < 0) {
+              textHash += mod_val;
+          }
+      }
   }
+  if(v1.size()==0)
+    return {-1};
+  return v1;
 }
 
-/* Driver code */
 int main(){
   string txt;
   string pat;
   cin>>txt>>pat;
 
-  // we mod to avoid overflowing of value but we should
-  // take as big prime_no as possible to avoid the collison
-  int prime_no = INT_MAX;
-
-  // Function Call
-  search(pat, txt, prime_no);
+  vector <int> ans = patternSearch(pat, txt);
+  for(auto it : ans)
+    cout<<it<<" ";
   return 0;
 }
-
